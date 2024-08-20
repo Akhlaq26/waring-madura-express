@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: express-app
+    ports:
+      - '${APP_PORT}:${APP_PORT}'
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      DB_HOST: ${DB_HOST}
+      DB_PORT:  ${DB_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_CONNECTION: ${DB_CONNECTION}
+      APP_PORT: ${APP_PORT}
+      APP_HOST: ${APP_HOST}
+      APP_KEY: ${APP_KEY}
+      APP_ENV: ${APP_ENV}
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    ports:
+      - '3308:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    command:
+      --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql-data:
